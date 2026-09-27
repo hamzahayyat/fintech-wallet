@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String        @id @default(uuid())
+  email                String        @unique
+  username             String        @unique
+  password             String
+  balance              Float         @default(1000.0)
+  sentTransactions     Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+}
+
+model Transaction {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentTransactions", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  amount     Float
+  mode       String   @default("SECURE") // "VULNERABLE" or "SECURE"
+  status     String   @default("SUCCESS") // "SUCCESS" or "FAILED"
+  note       String?
+  createdAt  DateTime @default(now())
+}
