@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Mini Secure Fintech Wallet | FAST CY-5004',
-  description: 'A secure fintech wallet application with live Vulnerable vs Secure before-and-after vulnerability demonstrations for FAST university CY-5004 assignment.',
+  title: 'Fintech Mini Wallet',
+  description: 'A secure fintech wallet application with live Vulnerable vs Secure before-and-after vulnerability demonstrations.',
 };
 
 export default function RootLayout({

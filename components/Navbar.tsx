@@ -34,23 +34,20 @@ export default function Navbar({ user, onRefresh }: NavbarProps) {
     <header className="sticky top-0 z-50 border-b border-gray-800 bg-fintech-dark/95 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand & Course Title */}
+        {/* Brand */}
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg">
             <Wallet className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
-              VaultShield Pay
-              <span className="text-xs px-2 py-0.5 rounded font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                CY-5004
-              </span>
+            <h1 className="text-lg font-bold text-white tracking-wide">
+              Fintech Mini Wallet
             </h1>
-            <p className="text-xs text-gray-400">FAST Secure Software Design Mini Wallet</p>
+            <p className="text-xs text-gray-400">Secure Software Design Project</p>
           </div>
         </div>
 
-        {/* Dynamic Security Mode Toggle Switch */}
+        {/* Security Mode Toggle Switch */}
         <div className="flex items-center gap-4">
           <div
             className={`flex items-center p-1.5 rounded-full border transition-all duration-300 ${

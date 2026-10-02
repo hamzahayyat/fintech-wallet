@@ -75,7 +75,7 @@ export default function LoginPage() {
                 <Wallet className="w-7 h-7 text-white" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight">Sign In to Wallet</h2>
-              <p className="text-xs text-gray-400 mt-1">CY-5004 Mini Secure Fintech Wallet</p>
+              <p className="text-xs text-gray-400 mt-1">Fintech Mini Wallet</p>
             </div>
 
             {error && (
