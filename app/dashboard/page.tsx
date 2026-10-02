@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Sidebar from '@/components/Sidebar';
+import Sidebar, { TabType } from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ExploitPlayground from '@/components/ExploitPlayground';
 import { useSecurityMode } from '@/context/SecurityModeContext';
@@ -13,8 +13,9 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  TrendingUp,
   CreditCard,
+  Search,
+  UserCheck,
 } from 'lucide-react';
 
 interface UserData {
@@ -39,9 +40,11 @@ interface TransactionItem {
 
 export default function DashboardPage() {
   const { securityMode, fetchWithSecurityMode } = useSecurityMode();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [user, setUser] = useState<UserData | null>(null);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Transfer Form State
@@ -131,7 +134,6 @@ export default function DashboardPage() {
 
   const isSecure = securityMode === 'secure';
 
-  // Calculate total sent and received
   const totalSent = transactions
     .filter((tx) => tx.senderId === user?.id)
     .reduce((sum, tx) => sum + tx.amount, 0);
@@ -140,84 +142,86 @@ export default function DashboardPage() {
     .filter((tx) => tx.receiverId === user?.id)
     .reduce((sum, tx) => sum + tx.amount, 0);
 
+  const filteredTransactions = transactions.filter((tx) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      tx.sender.username.toLowerCase().includes(q) ||
+      tx.receiver.username.toLowerCase().includes(q) ||
+      tx.mode.toLowerCase().includes(q) ||
+      tx.amount.toString().includes(q)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-[#131722] text-white flex">
       {/* Sidebar Navigation */}
-      <Sidebar />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header user={user} />
 
         <main className="flex-1 p-8 space-y-8 overflow-y-auto">
-          {/* Top Metric Cards Row (Matching Reference UI Style) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Total Balance Card (Highlighted Accent Card matching reference) */}
-            <div className="bg-[#c5f946] text-slate-950 rounded-2xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                  Total Wallet Balance
-                </span>
-                <div className="w-8 h-8 rounded-full bg-slate-950/10 flex items-center justify-center">
-                  <Wallet className="w-4 h-4 text-slate-950" />
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Metric Cards Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* Balance Card */}
+                <div className="bg-[#c5f946] text-slate-950 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      Total Wallet Balance
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-slate-950/10 flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-slate-950" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-extrabold tracking-tight mb-2">
+                    ${user?.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[11px] font-semibold text-slate-800">Available Balance</p>
+                </div>
+
+                {/* Total Sent Card */}
+                <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      Total Sent
+                    </span>
+                    <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-white tracking-tight mb-2">
+                    ${totalSent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[11px] text-slate-400">Debited Transfers</p>
+                </div>
+
+                {/* Total Received Card */}
+                <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      Total Received
+                    </span>
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                      <ArrowDownLeft className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-white tracking-tight mb-2">
+                    ${totalReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-[11px] text-slate-400">Credited Deposits</p>
                 </div>
               </div>
 
-              <div className="text-3xl font-extrabold tracking-tight mb-2">
-                ${user?.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-
-              <p className="text-[11px] font-semibold text-slate-800">
-                Available Funds
-              </p>
-            </div>
-
-            {/* Total Sent Card */}
-            <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Total Sent
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
-                  <ArrowUpRight className="w-4 h-4" />
-                </div>
-              </div>
-
-              <div className="text-3xl font-bold text-white tracking-tight mb-2">
-                ${totalSent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-
-              <p className="text-[11px] text-slate-400">Debited Transfers</p>
-            </div>
-
-            {/* Total Received Card */}
-            <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Total Received
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                  <ArrowDownLeft className="w-4 h-4" />
-                </div>
-              </div>
-
-              <div className="text-3xl font-bold text-white tracking-tight mb-2">
-                ${totalReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-
-              <p className="text-[11px] text-slate-400">Credited Deposits</p>
-            </div>
-          </div>
-
-          {/* Grid Layout: Fund Transfer & Account Summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left: Fund Transfer Module */}
-            <div className="lg:col-span-2 bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 flex flex-col justify-between">
-              <div>
+              {/* Transfer Form */}
+              <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Send className="w-4 h-4 text-blue-400" />
-                    Quick Fund Transfer
+                    Send Money
                   </h3>
                   <span className="text-xs text-slate-400">
                     Mode: <strong className={isSecure ? 'text-emerald-400' : 'text-red-400'}>{securityMode.toUpperCase()}</strong>
@@ -284,125 +288,147 @@ export default function DashboardPage() {
                 </form>
               </div>
             </div>
+          )}
 
-            {/* Right: User Quick Stat Card */}
-            <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-[#2a3142]">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-lg">
-                    {user?.username.charAt(0).toUpperCase()}
+          {/* TAB 2: WALLET */}
+          {activeTab === 'wallet' && (
+            <div className="space-y-6">
+              <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6">
+                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-blue-400" />
+                  Account Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-4 bg-[#181c27] border border-[#2a3142] rounded-xl">
+                    <p className="text-slate-400 mb-1">Account Holder</p>
+                    <p className="text-base font-bold text-white">{user?.username}</p>
+                    <p className="text-xs text-slate-400 mt-1">{user?.email}</p>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-white text-sm">{user?.username}</h4>
-                    <p className="text-xs text-slate-400">{user?.email}</p>
-                  </div>
-                </div>
 
-                <div className="space-y-3 text-xs">
-                  <div className="flex justify-between py-1.5 border-b border-[#2a3142]">
-                    <span className="text-slate-400">Account ID:</span>
-                    <span className="font-mono text-slate-200">{user?.id.substring(0, 12)}...</span>
+                  <div className="p-4 bg-[#181c27] border border-[#2a3142] rounded-xl">
+                    <p className="text-slate-400 mb-1">Current Balance</p>
+                    <p className="text-2xl font-extrabold text-emerald-400 font-mono">
+                      ${user?.balance.toFixed(2)}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1">Available for transfers</p>
                   </div>
-                  <div className="flex justify-between py-1.5 border-b border-[#2a3142]">
-                    <span className="text-slate-400">Account Type:</span>
-                    <span className="text-emerald-400 font-medium">Standard Wallet</span>
+
+                  <div className="p-4 bg-[#181c27] border border-[#2a3142] rounded-xl">
+                    <p className="text-slate-400 mb-1">Account ID</p>
+                    <p className="font-mono text-xs text-slate-200">{user?.id}</p>
                   </div>
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-slate-400">Status:</span>
-                    <span className="text-blue-400 font-medium">Active</span>
+
+                  <div className="p-4 bg-[#181c27] border border-[#2a3142] rounded-xl">
+                    <p className="text-slate-400 mb-1">Account Status</p>
+                    <p className="text-xs font-bold text-blue-400">Active & Verified</p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Exploit Simulator Panel */}
-          {user && (
+          {/* TAB 3: TRANSACTIONS */}
+          {activeTab === 'transactions' && (
+            <div className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-base font-bold text-white">Transaction History</h3>
+                  <p className="text-xs text-slate-400">{transactions.length} total records</p>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search transactions..."
+                    className="w-full bg-[#181c27] border border-[#2a3142] text-white rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {filteredTransactions.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  No transactions found matching your search.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#2a3142] text-slate-400 font-semibold uppercase tracking-wider">
+                        <th className="pb-3 pl-2">Type</th>
+                        <th className="pb-3">Sender</th>
+                        <th className="pb-3">Receiver</th>
+                        <th className="pb-3">Amount</th>
+                        <th className="pb-3">Mode</th>
+                        <th className="pb-3">Date</th>
+                        <th className="pb-3 pr-2">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#2a3142] font-mono text-xs">
+                      {filteredTransactions.map((tx) => {
+                        const isSender = tx.senderId === user?.id;
+                        return (
+                          <tr key={tx.id} className="hover:bg-[#252b3b] transition">
+                            <td className="py-3.5 pl-2">
+                              <span
+                                className={`inline-flex items-center gap-1 font-bold ${
+                                  isSender ? 'text-red-400' : 'text-emerald-400'
+                                }`}
+                              >
+                                {isSender ? (
+                                  <ArrowUpRight className="w-3.5 h-3.5" />
+                                ) : (
+                                  <ArrowDownLeft className="w-3.5 h-3.5" />
+                                )}
+                                {isSender ? 'DEBIT' : 'CREDIT'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 text-slate-200">
+                              {tx.sender.username}
+                            </td>
+                            <td className="py-3.5 text-slate-200">
+                              {tx.receiver.username}
+                            </td>
+                            <td className="py-3.5 font-bold text-white">
+                              ${tx.amount.toFixed(2)}
+                            </td>
+                            <td className="py-3.5">
+                              <span
+                                className={`px-2 py-0.5 text-[10px] font-bold rounded ${
+                                  tx.mode === 'SECURE'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                }`}
+                              >
+                                {tx.mode}
+                              </span>
+                            </td>
+                            <td className="py-3.5 text-slate-400 text-[11px]">
+                              {new Date(tx.createdAt).toLocaleString()}
+                            </td>
+                            <td className="py-3.5 pr-2 text-slate-400 text-[11px]">
+                              {tx.note || tx.status}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: EXPLOIT TESTS */}
+          {activeTab === 'exploits' && user && (
             <ExploitPlayground
               currentUser={user}
               allUsers={allUsers}
               onRefresh={loadData}
             />
           )}
-
-          {/* Transaction History Table */}
-          <div id="transactions" className="bg-[#1e2330] border border-[#2a3142] rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-base font-bold text-white">Transaction History</h3>
-              <span className="text-xs text-slate-400">{transactions.length} Records</span>
-            </div>
-
-            {transactions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-xs">
-                No transactions recorded yet.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#2a3142] text-slate-400 font-semibold uppercase tracking-wider">
-                      <th className="pb-3 pl-2">Type</th>
-                      <th className="pb-3">Sender</th>
-                      <th className="pb-3">Receiver</th>
-                      <th className="pb-3">Amount</th>
-                      <th className="pb-3">Mode</th>
-                      <th className="pb-3">Date</th>
-                      <th className="pb-3 pr-2">Note</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#2a3142] font-mono text-xs">
-                    {transactions.map((tx) => {
-                      const isSender = tx.senderId === user?.id;
-                      return (
-                        <tr key={tx.id} className="hover:bg-[#252b3b] transition">
-                          <td className="py-3.5 pl-2">
-                            <span
-                              className={`inline-flex items-center gap-1 font-bold ${
-                                isSender ? 'text-red-400' : 'text-emerald-400'
-                              }`}
-                            >
-                              {isSender ? (
-                                <ArrowUpRight className="w-3.5 h-3.5" />
-                              ) : (
-                                <ArrowDownLeft className="w-3.5 h-3.5" />
-                              )}
-                              {isSender ? 'DEBIT' : 'CREDIT'}
-                            </span>
-                          </td>
-                          <td className="py-3.5 text-slate-200">
-                            {tx.sender.username}
-                          </td>
-                          <td className="py-3.5 text-slate-200">
-                            {tx.receiver.username}
-                          </td>
-                          <td className="py-3.5 font-bold text-white">
-                            ${tx.amount.toFixed(2)}
-                          </td>
-                          <td className="py-3.5">
-                            <span
-                              className={`px-2 py-0.5 text-[10px] font-bold rounded ${
-                                tx.mode === 'SECURE'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                              }`}
-                            >
-                              {tx.mode}
-                            </span>
-                          </td>
-                          <td className="py-3.5 text-slate-400 text-[11px]">
-                            {new Date(tx.createdAt).toLocaleString()}
-                          </td>
-                          <td className="py-3.5 pr-2 text-slate-400 text-[11px]">
-                            {tx.note || tx.status}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
         </main>
       </div>
     </div>

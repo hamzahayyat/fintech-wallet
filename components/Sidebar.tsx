@@ -1,20 +1,23 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Wallet,
   ArrowRightLeft,
   ShieldAlert,
   LogOut,
-  Sliders,
-  HelpCircle,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export default function Sidebar() {
-  const pathname = usePathname();
+export type TabType = 'overview' | 'wallet' | 'transactions' | 'exploits';
+
+interface SidebarProps {
+  activeTab: TabType;
+  setActiveTab: (tab: TabType) => void;
+}
+
+export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -27,11 +30,11 @@ export default function Sidebar() {
     }
   };
 
-  const menuItems = [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Wallet', href: '/dashboard', icon: Wallet },
-    { name: 'Transactions', href: '#transactions', icon: ArrowRightLeft },
-    { name: 'Exploit Tests', href: '#exploit-tests', icon: ShieldAlert },
+  const menuItems: { id: TabType; name: string; icon: any }[] = [
+    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+    { id: 'wallet', name: 'Wallet', icon: Wallet },
+    { id: 'transactions', name: 'Transactions', icon: ArrowRightLeft },
+    { id: 'exploits', name: 'Exploit Tests', icon: ShieldAlert },
   ];
 
   return (
@@ -48,16 +51,16 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Navigation Links */}
+        {/* Navigation Tabs */}
         <nav className="space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
+            const isActive = activeTab === item.id;
             return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all ${
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all text-left ${
                   isActive
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-[#202636]'
@@ -65,7 +68,7 @@ export default function Sidebar() {
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-slate-900' : 'text-slate-400'}`} />
                 <span>{item.name}</span>
-              </Link>
+              </button>
             );
           })}
         </nav>
