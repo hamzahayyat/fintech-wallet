@@ -1,29 +1,50 @@
-# Mini Secure Fintech Wallet (FAST University CY-5004)
+# Fintech Mini Wallet
 
-A full-stack Next.js web application built for the **CY-5004 Secure Software Design** university assignment. Features an interactive **"Vulnerable Mode vs Secure Mode"** toggle for before-and-after vulnerability demonstrations.
+A web application for a mini fintech wallet built with Next.js 14, Prisma ORM (PostgreSQL), and Tailwind CSS.
 
-## Features & Security Flaws Covered
+This project includes a toggle switch in the navigation bar to switch between Vulnerable Mode and Secure Mode to demonstrate security vulnerabilities and how to fix them.
 
-### Vulnerable Mode:
-1. **BOLA (Broken Object Level Authorization)**: `/api/transfer` trusts `sender_id` provided in JSON request body.
-2. **Race Condition / Non-Atomic DB Updates**: Updates debit and credit balance independently without Prisma `$transaction`.
-3. **Missing Input Validation**: Accepts negative numbers, allowing attackers to credit their own balance.
-
-### Secure Mode:
-1. **Object-Level Access Control**: Strictly derives sender ID from verified HTTP-only JWT session cookie.
-2. **Data Integrity / Atomicity**: Wraps all balance updates and logs inside `prisma.$transaction`.
-3. **Schema & Business Rule Validation**: Zod schema validation ensuring `amount > 0` and sufficient funds.
-
----
+## Features
+- User registration and login with JWT cookies
+- Wallet balance dashboard
+- Fund transfer module (transfer by email or username)
+- Transaction history table
+- Navbar security mode toggle switch (Vulnerable vs Secure)
+- Exploit test buttons on the dashboard
 
 ## Tech Stack
-- **Framework**: Next.js 14 App Router (React + Serverless API routes)
-- **Database**: PostgreSQL with Prisma ORM
-- **Styling**: Tailwind CSS (Dark Fintech Theme)
-- **Auth**: Stateless JWT via HTTP-only Cookies (JOSE + bcryptjs)
+- **Framework:** Next.js 14 (App Router)
+- **Database:** PostgreSQL (Neon) with Prisma ORM
+- **Styling:** Tailwind CSS
+- **Authentication:** JWT tokens stored in HTTP-only cookies
 
----
+## Vulnerabilities & Controls Covered
+1. **BOLA (Broken Object Level Authorization):** Vulnerable mode accepts a `senderId` in the request body to transfer from another account; Secure mode strictly uses the authenticated session user ID.
+2. **Race Condition:** Vulnerable mode uses separate update queries; Secure mode wraps debit, credit, and logging inside a Prisma `$transaction`.
+3. **Missing Input Validation:** Vulnerable mode accepts negative transfer amounts; Secure mode validates that the amount is greater than 0 and checks for sufficient balance.
 
-## Deployment Instructions
+## Setup Instructions
 
-Refer to [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT_GUIDE.md) for full deployment instructions.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Set environment variables in `.env`:
+   ```env
+   DATABASE_URL="your-postgresql-connection-string"
+   JWT_SECRET="your-jwt-secret-key"
+   ```
+
+3. Push database schema:
+   ```bash
+   npx prisma db push
+   ```
+
+4. Run local development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Seed test accounts (optional):
+   Open `/api/seed` in your browser or click "Seed Accounts" on the login page to create demo accounts (alice, bob, attacker).
